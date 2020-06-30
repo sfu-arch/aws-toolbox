@@ -107,12 +107,16 @@ def printStatus(instanceData):
 def main():
     parser = argparse.ArgumentParser(description="AWS Toolbox to manage instances")
     exe_group = parser.add_mutually_exclusive_group()
+
     parser.add_argument("-l", "--print-list", help="Print the list of all aws instances", action='store_true')
     parser.add_argument("-s", "--status", help="Print the the status of the instances", action='store_true', default=False)
     parser.add_argument("--name", help="Input Instance name to search", default=None)
+    parser.add_argument("--afi", help="Check AFI images", action='store_true', default=False)
+
 
     exe_group.add_argument("--start", help="Run the searched instance", action='store_true')
     exe_group.add_argument("--stop", help="Stop the searched instance", action='store_true')
+
 
 
     args = parser.parse_args()
@@ -130,6 +134,10 @@ def main():
         instances = getInstances(args.name)
         for instance in instances:
             instance.stop()
+    if(args.afi):
+        # instances = getInstances(args.name)
+        # for instance in instances:
+        #     instance.stop()
 
 if __name__ == "__main__":
     main()
