@@ -40,13 +40,6 @@ import dateutil.parser
 import argparse
 
 
-# Usage: python instance-states.py [key_name]
-# Example 1: Show the instances of comaniac
-#   python instance-states.py comaniac
-# Example 2: Show all instances
-#   python instance-states.py
-
-
 def printInstances(Name):
     count = 0
 
@@ -89,7 +82,6 @@ def printInstances(Name):
 
 
 def main():
-    # keyName = None
     parser = argparse.ArgumentParser(description="AWS Toolbox to manage instances")
     parser.add_argument("-l", "--print-list", help="Print the list of all aws instances", action='store_true')
     parser.add_argument("--name", help="Input Instance name to search", default=None)
