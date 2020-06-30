@@ -38,9 +38,9 @@ import subprocess
 from datetime import datetime, date, time
 import dateutil.parser
 import argparse
+import instance
 
-
-def printInstances(Name):
+def getInstances(Name):
     count = 0
 
     command = ['aws', 'ec2', 'describe-instances']
@@ -49,15 +49,9 @@ def printInstances(Name):
 
     instanceData = (json.loads(data))['Reservations']
 
-    tableFormat = '|{0:20s}|{1:15s}|{2:19s}|{3:15s}|{4:19s}|{5:10s}|'
-    print('|' + '-' * 103 + '|')
-    print(tableFormat.format('Name', 'KeyName', 'InstanceId', 'PublicIpAddress',
-            'LaunchTime', 'State'))
-    print('|' + '-' * 20 + '|' + '-' * 15 + '|' + 
-    '-' * 19 + '|' + '-' * 15 + '|' + '-' * 19 + '|' + '-' * 10 + '|')
-
-    for instance in instanceData:
-        detail = instance['Instances'][0]
+    ret_instances = []
+    for inst in instanceData:
+        detail = inst['Instances'][0]
         state = detail['State']
         datetime = dateutil.parser.parse(detail['LaunchTime'])
         datetimeStr = datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -68,26 +62,61 @@ def printInstances(Name):
 
         if not Name or Name == inst_name:
             count += 1
+            conv = lambda i : i or '<None>' 
             if 'PublicIpAddress' in detail:
                 ip = detail['PublicIpAddress']
             else:
                 ip = 'invalid'
-            conv = lambda i : i or '<None>' 
-            print(tableFormat.format(conv(inst_name), key, detail['InstanceId'], ip,
-                    datetimeStr, state['Name']))
+            new_instance = instance.Instance(conv(inst_name), key, detail['InstanceId'], ip,
+                datetimeStr, state['Name'])
+            ret_instances.append(new_instance)
+
+    return ret_instances
+
+def printInstances(instanceData):
+    count = 0
+
+    tableFormat = '|{0:20s}|{1:15s}|{2:19s}|{3:15s}|{4:19s}|{5:10s}|'
+    print('|' + '-' * 103 + '|')
+    print(tableFormat.format('Name', 'KeyName', 'InstanceId', 'PublicIpAddress',
+            'LaunchTime', 'State'))
+    print('|' + '-' * 103 + '|')
+
+    for inst in instanceData:
+        count += 1
+        print(tableFormat.format(inst.name, inst.key, inst.ID, inst.ip,
+                inst.date, inst.state))
 
     print('|' + '-' * 103 + '|')
     print('Total {0} instances.'.format(count))
+
+
+def printStatus(instanceData):
+
+    tableFormat = '|{0:20s}|{1:15s}|'
+    print('|' + '-' * 36 + '|')
+    print(tableFormat.format('Name', 'Status'))
+    print('|' + '-' * 36 + '|')
+
+    for inst in instanceData:
+        print(tableFormat.format(inst.name, inst.state))
+
+    print('|' + '-' * 36 + '|')
 
 
 
 def main():
     parser = argparse.ArgumentParser(description="AWS Toolbox to manage instances")
     parser.add_argument("-l", "--print-list", help="Print the list of all aws instances", action='store_true')
+    parser.add_argument("-s", "--status", help="Print the the status of the instances", action='store_true', default=False)
     parser.add_argument("--name", help="Input Instance name to search", default=None)
     args = parser.parse_args()
+    if(args.status):
+        instances = getInstances(args.name)
+        printStatus(instances)
     if(args.print_list):
-        printInstances(args.name)
+        instances = getInstances(args.name)
+        printInstances(instances)
 
 
 if __name__ == "__main__":
